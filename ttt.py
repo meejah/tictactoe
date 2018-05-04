@@ -7,6 +7,7 @@ board is a list of 9 elements from ['x','o','.']. '.' means empty spot.
 
 import sys
 import types
+from copy import copy
 
 
 class GameStates(object):
@@ -32,6 +33,48 @@ def all_moves(board, who):
         for col in range(3):
             if board.is_free(col, row):
                 yield (col, row)
+
+
+def other(who):
+    if who == 'x':
+        return 'o'
+    elif who == 'o':
+        return 'x'
+    else:
+        raise Exception('sadness')
+
+
+def recurse_moves(board, who):
+    if board.current_state() == GameStates.invalid:
+        raise Exception('sad')
+
+    score = None
+    for move in all_moves(board, who):
+        o_board = board.copy()
+        s = best_score(o_board, other(who), move)
+        if score is not None and s > score:
+            score = s
+    return score
+
+
+def best_score(board, who, move):
+    print("best_score", board._board, who, move)
+    score = None
+    for row in range(3):
+        for col in range(3):
+            if board.is_free(col, row):
+                next_board = board.copy()
+                Game(next_board._board).move(who, col, row)
+                print("NEXT", next_board._board)
+                if next_board.is_winner(who):
+                    return sys.maxint
+                if next_board.is_winner(other(who)):
+                    return -sys.maxint
+                s = recurse_moves(next_board, other(who))
+                if score is None or s > score:
+                    print("BEST", s, score)
+                    score = s
+    return score
 
 
 class AI(object):
@@ -60,6 +103,11 @@ class AI(object):
             return sys.maxint
         if who == 'o' and board.current_state() == GameStates.x_wins:
             return -sys.maxint
+
+        moves = dict()
+        for move in all_moves(board, who):
+            moves[move] = best_score(board, who, move)
+
 
 
 class Game(object):
@@ -101,6 +149,9 @@ class Board(object):
            state. Each char is either 'x', 'o' or '.'
         """
         self._board = board
+
+    def copy(self):
+        return Board(copy(self._board))
 
     def is_free(self, col, row):
         return self._board[row * 3 + col] == '.'

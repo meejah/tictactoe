@@ -44,6 +44,18 @@ class TestAI(unittest.TestCase):
             list(moves),
         )
 
+    def test_best_score(self):
+        board = ttt.Board([
+            'x', 'o', 'o',
+            'o', 'x', '.',
+            'x', 'o', '.',
+        ])
+
+        self.assertEqual(
+            ttt.best_score(board, 'x', (2, 2)),
+            sys.maxint
+        )
+
     def _test_eval(self):
         board0 = ttt.Board([
             '.', '.', '.'
